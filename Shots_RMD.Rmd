@@ -13,8 +13,20 @@ library(scales)
 library(lubridate)
 library(ggthemes)
 
-df_1415 <- read.csv("data/epl/shots_epl_14-15.csv") %>% 
-  mutate(date = as.Date(date)) %>% 
+library(ggsoccer)
+
+df_1415 <- read_csv("data/epl/shots_epl_14-15.csv") %>% 
+  mutate(date = as.Date(date),
+         id = as.character(id),
+         match_id = as.character(match_id),
+         player_id = as.character(player_id)) %>% 
+  as_tibble()
+
+df_1516 <- read.csv("data/epl/shots_epl_15-16.csv") %>% 
+  mutate(date = as.Date(date),
+         id = as.character(id),
+         match_id = as.character(match_id),
+         player_id = as.character(player_id)) %>% 
   as_tibble()
 
 theme_set(theme_minimal())
@@ -23,11 +35,63 @@ theme_set(theme_minimal())
 ```{r}
 
 df_1415 %>% 
-  filter(lastAction %in% c("Pass", "Cross", "None", "Standard")) %>% 
+  filter(lastAction %in% c("Pass", "Cross", "None", "Standard", "BallRecovery")) %>% 
   ggplot(aes(minute, fill = lastAction)) +
   geom_histogram(bins = 15, show.legend = FALSE) +
   facet_wrap(~lastAction)
-  
-  
+
+df_1415 %>% 
+  ggplot(aes(xG)) +
+  geom_histogram() +
+  scale_x_log10()
+
+ggplot(df_1415) +
+  annotate_pitch(colour = "white",
+                 fill = "chartreuse4",
+                 limits = FALSE) +
+  geom_point(aes(x = X*100, y = 100 - (Y*100)),
+                 fill = "yellow",
+                 shape = 21,
+                 size = 4) +
+  theme_pitch() +
+  theme(panel.background = element_rect(fill = "chartreuse4")) +
+  coord_flip(xlim = c(49, 101),
+             ylim = c(-12, 112))
 
 ```
+
+
+---Arsenal---
+```{r}
+df_arsh <- df_1415 %>% 
+  filter(h_team=="Arsenal" & h_a == "h")
+
+df_arsa <- df_1415 %>% 
+  filter(a_team=="Arsenal" & h_a == "a")
+
+df_ars <- rbind(df_arsh, df_arsa)
+  
+
+df_ars %>% 
+  ggplot(aes(xG)) +
+  geom_histogram() +
+  scale_x_log10()
+
+df_ars %>% 
+  filter(result=="Goal") %>% 
+  ggplot(aes()) +
+  annotate_pitch(colour = "white",
+                 fill = "chartreuse4",
+                 limits = FALSE) +
+  geom_point(aes(x = X*100, y = 100 - (Y*100)),
+             fill = "yellow",    
+             shape = 21,
+             size = 2) +
+  theme_pitch() +
+  theme(panel.background = element_rect(fill = "chartreuse4")) +
+  coord_flip(xlim = c(49, 101),
+             ylim = c(-12, 112)) +
+  facet_wrap(~player)
+
+```
+
